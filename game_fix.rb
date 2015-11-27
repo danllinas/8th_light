@@ -29,6 +29,10 @@ class Game
       puts "All right, humans. Go ahead and play each other. #{first_move} goes first. Make your move. Choose a space to place your marker by selecting a number from 1 - 9."
     when 6
       puts "Please make a valid selection."
+    when 7
+      puts "Great! You want to challenge me. How cute. The game is simple. Choose a space to place your marker by selecting a number from 1 - 9. #{first_move} goes first."
+    when 8
+      puts "Go ahead, human. Your marker is: #{player}."
     end
   end
 
@@ -77,7 +81,7 @@ class Game
   end
 
   def who_goes_first
-    puts "So who goes first? Type '1' for Player 1, and '2' for Player 2."
+    puts "So who goes first? Type '1' for Player 1, and '2' for Player 2. If you're playing against me, consider me Player 2."
     first_move = gets.chomp.to_i
     case first_move
     when 1
@@ -89,46 +93,67 @@ class Game
     else
       who_goes_first
     end
-    game_progression(first_move)
+    game_initialization(first_move)
   end
 
-  def game_progression(first_move)
+  def game_initialization(first_move)
     case @game_type
     when 1
       directions(5, first_move: first_move)
-
       draw_board
-
+      #assigning markers to first ro second player
       first_move == "Player 1" ? first = @player_1 : first = @player_2
       first == @player_1 ? second = @player_2 : second = @player_1
+      human_vs_human(first, second)
+    when 2
+      directions(7, first_move: first_move)
+      draw_board
+      first_move == "Player 1" ? first = @player_1 : first = @player_2
+      first == @player_1 ? second = @player_2 : second = @player_1
+      computer_vs_human(first, second)
+    end
+  end
 
+  def computer_vs_human(first, second)
+    if first == @player_1
+      directions(8, player: first)
       until game_is_over(@board) || tie(@board)
         puts "It's your turn, marker #{first}."
         get_player_spot(first)
         if !game_is_over(@board) && !tie(@board)
-          draw_board
-          puts "It's your turn, marker #{second}."
-          get_player_spot(second)
+          eval_board
         end
         draw_board
       end
-      puts "Game over!"
-    when 2
-      # puts "code for human v computer game"
+      puts "Game Over!"
+    else
+      puts "Great! I get to go first."
+      until game_is_over(@board) || tie(@board)
+        if !game_is_over(@board) || !tie(@board)
+          puts "Marker #{first}'s turn:'"
+          eval_board
+        end
+        draw_board
+        puts "It's your turn, marker #{second}."
+        get_player_spot(second)
+        draw_board
+      end
+      puts "Game Over!"
     end
+  end
 
-
-    # if first_move == "player_1"
-    #   puts "Please select your spot."
-    #   until game_is_over(@board) || tie(@board)
-    #     get_human_spot
-    #     if !game_is_over(@board) && !tie(@board)
-    #       eval_board
-    #     end
-    #     puts "|_#{@board[0]}_|_#{@board[1]}_|_#{@board[2]}_|\n|_#{@board[3]}_|_#{@board[4]}_|_#{@board[5]}_|\n|_#{@board[6]}_|_#{@board[7]}_|_#{@board[8]}_|\n"
-    #   end
-    #   puts "Game over"
-    # end
+  def human_vs_human(first, second)
+    until game_is_over(@board) || tie(@board)
+      puts "It's your turn, marker #{first}."
+      get_player_spot(first)
+      if !game_is_over(@board) && !tie(@board)
+        draw_board
+        puts "It's your turn, marker #{second}."
+        get_player_spot(second)
+      end
+      draw_board
+    end
+    puts "Game over!"
   end
 
   def get_player_spot(player)
@@ -158,12 +183,12 @@ class Game
   def eval_board
     spot = nil
     until spot
-      if @board[4] == "4"
-        spot = 4
-        @board[spot] = @player_2
+      if @board[4] == "5"
+        spot = 5
+        @board[spot - 1] = @player_2
       else
         spot = get_best_move(@board, @player_2)
-        if @board[spot] != "X" && @board[spot] != "O"
+        if @board[spot] != @player_1 && @board[spot] != @player_2
           @board[spot] = @player_2
         else
           spot = nil
@@ -176,7 +201,7 @@ class Game
     available_spaces = []
     best_move = nil
     board.each do |spot|
-      if s != "X" && s != "O"
+      if spot != @player_1 && spot != @player_2
         available_spaces << spot
       end
     end
@@ -207,14 +232,14 @@ class Game
 
   def game_is_over(b)
 
-    [b[1], b[2], b[3]].uniq.length == 1 ||
-    [b[4], b[5], b[6]].uniq.length == 1 ||
-    [b[7], b[8], b[9]].uniq.length == 1 ||
+    [b[0], b[1], b[2]].uniq.length == 1 ||
+    [b[3], b[4], b[5]].uniq.length == 1 ||
+    [b[6], b[7], b[8]].uniq.length == 1 ||
+    [b[0], b[3], b[6]].uniq.length == 1 ||
     [b[1], b[4], b[7]].uniq.length == 1 ||
     [b[2], b[5], b[8]].uniq.length == 1 ||
-    [b[3], b[6], b[9]].uniq.length == 1 ||
-    [b[1], b[5], b[9]].uniq.length == 1 ||
-    [b[3], b[5], b[7]].uniq.length == 1
+    [b[0], b[4], b[8]].uniq.length == 1 ||
+    [b[2], b[4], b[6]].uniq.length == 1
   end
 
   def tie(b)
